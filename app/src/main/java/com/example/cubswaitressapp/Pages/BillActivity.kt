@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import com.example.cubswaitressapp.MainActivity
 import com.example.cubswaitressapp.Models.*
@@ -115,6 +116,11 @@ class BillActivity : AppCompatActivity() {
         bill_view_orders_recycler_view.adapter = adaptor
 
         fetchTablesAndUpdateUI()
+
+        menu_container_in_bill_activity.setOnClickListener {
+            Toast.makeText(this, "Прячу меню", Toast.LENGTH_SHORT).show()
+            menu_container_in_bill_activity.visibility = View.GONE
+        }
 
     }
 
