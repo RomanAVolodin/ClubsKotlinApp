@@ -1,15 +1,18 @@
 package com.example.cubswaitressapp.Pages
 
+import android.app.ProgressDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.cubswaitressapp.MainActivity
+import com.example.cubswaitressapp.Models.Bill
 import com.example.cubswaitressapp.Models.Hall
 import com.example.cubswaitressapp.Models.Table
 import com.example.cubswaitressapp.Models.TableBill
@@ -32,6 +35,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
+import kotlin.coroutines.coroutineContext
 
 class HallwithTablesActivity : AppCompatActivity() {
 
@@ -39,6 +43,8 @@ class HallwithTablesActivity : AppCompatActivity() {
         val TAG = "HallsWithTables"
         var HALL_KEY = "HALL_KEY"
     }
+
+    var progressDialog: ProgressDialog? = null
 
     var updateTimer: Timer? = null
 
@@ -73,7 +79,7 @@ class HallwithTablesActivity : AppCompatActivity() {
 
     fun fetchTablesAndUpdateUI() {
 
-        GlobalScope.launch(Dispatchers.IO) {
+       GlobalScope.launch(Dispatchers.IO) {
 
             try {
 
@@ -84,6 +90,7 @@ class HallwithTablesActivity : AppCompatActivity() {
                 println("from url: $fetch_url")
 
                 launch(Dispatchers.Main) {
+                    progressDialog?.dismiss()
                     Toast.makeText(applicationContext, "Ошибка при получении списка столов", Toast.LENGTH_LONG).show()
                 }
 
@@ -95,6 +102,8 @@ class HallwithTablesActivity : AppCompatActivity() {
                 for (table in tables) {
                     adaptor.add(TableItem(table))
                 }
+
+                progressDialog?.dismiss()
             }
 
         }
@@ -109,6 +118,11 @@ class HallwithTablesActivity : AppCompatActivity() {
         hall = intent.getParcelableExtra<Hall>(HALL_KEY)
 
         supportActionBar?.title = hall?.name
+
+        progressDialog = ProgressDialog(this)
+        progressDialog?.setMessage("Получаю список столов...")
+        progressDialog?.setCancelable(false)
+        progressDialog?.show()
 
         hall_with_tables_tables_recycler_view.adapter = adaptor
 
@@ -140,7 +154,6 @@ class HallwithTablesActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(HallwithTablesActivity.TAG, "DESTROY ACTIVITY -------------------")
         updateTimer?.cancel()
         updateTimer?.purge()
 
@@ -152,6 +165,70 @@ class TableItem(val table: Table): Item<ViewHolder>() {
 
     val adaptor = GroupAdapter<ViewHolder>()
 
+    var newBill: TableBill? = null
+
+    val create_bill_url = "${MainActivity.serverBaseUrl}/bills/create-bill"
+
+    suspend fun createBill() {
+
+        val client = HttpClient(Android) {
+            install(JsonFeature) {
+                serializer = GsonSerializer()
+            }
+        }
+
+        client.use {
+            newBill = it.get(create_bill_url) {
+                fillHeadersCaseParameters()
+            }
+
+        }
+
+    }
+
+    private fun HttpRequestBuilder.fillHeadersCaseParameters() {
+        parameter("table_id", table.id)
+        parameter("personal_id", MainActivity.currentUser?.id)
+    }
+
+    fun fetchBillAndUpdateUI(view: View) {
+
+        val progressDialog = ProgressDialog(view.context)
+        progressDialog.setMessage("Создаю счет...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                createBill()
+
+            } catch (cause: Throwable) {
+                println("Error: $cause")
+                println("create bill by url : $create_bill_url, table_id: ${table.id}, user_id: ${MainActivity.currentUser?.id}")
+                launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(view.context, "Ошибка при создании счета", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+
+            launch(Dispatchers.Main) {
+                progressDialog.dismiss()
+                if (newBill != null) {
+                    adaptor.add(BillInTableItem(newBill!!))
+                }
+                Toast.makeText(view.context, "Счет создан", Toast.LENGTH_LONG).show()
+
+                val intent = Intent(view.context, BillActivity::class.java)
+                intent.putExtra(BillActivity.BILL_KEY, newBill)
+                startActivity(view.context, intent, null)
+            }
+
+        }
+    }
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
 
@@ -171,7 +248,10 @@ class TableItem(val table: Table): Item<ViewHolder>() {
             intent.putExtra(BillActivity.BILL_KEY, billItem.bill)
             startActivity(view.context, intent, null)
 
-            Log.d(HallwithTablesActivity.TAG, "click on bill number: " + billItem.bill.number)
+        }
+
+        viewHolder.itemView.add_new_bill_to_table_button.setOnClickListener {
+            fetchBillAndUpdateUI(it)
         }
 
         viewHolder.itemView.table_in_list_view_bills_list_recyclerView.adapter = adaptor

@@ -1,5 +1,6 @@
 package com.example.cubswaitressapp.Pages
 
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -63,6 +64,11 @@ class HallsListFragment : androidx.fragment.app.Fragment() {
 
     fun fetchHallsAndUpdateUI() {
 
+        val progressDialog = ProgressDialog(context)
+        progressDialog.setMessage("Получаю список залов...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
         GlobalScope.launch(Dispatchers.IO) {
 
             try {
@@ -73,6 +79,7 @@ class HallsListFragment : androidx.fragment.app.Fragment() {
                 println("Error: $cause")
 
                 launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
                     Toast.makeText(activity, "Ошибка при получении списка залов", Toast.LENGTH_LONG).show()
                 }
 
@@ -83,6 +90,8 @@ class HallsListFragment : androidx.fragment.app.Fragment() {
                 for (hall in halls) {
                     adaptor.add(HallItem(hall))
                 }
+
+                progressDialog.dismiss()
 
                 adaptor.setOnItemClickListener { item, view ->
                     val userItem = item as HallItem

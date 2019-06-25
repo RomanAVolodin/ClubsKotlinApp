@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     companion object {
         val TAG = "MainPageActivity"
         var currentUser: User? = null
-        val serverBaseUrl = "http://10.211.55.3"
+        val serverBaseUrl = "http://backend.zavods.net"
         val updateTimer: Long = 5000
     }
 

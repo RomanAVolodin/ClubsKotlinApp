@@ -1,6 +1,7 @@
 package com.example.cubswaitressapp
 
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -59,7 +60,10 @@ class LoginActivity : AppCompatActivity() {
 
     fun fetchUserAndUpdateUI() {
 
-        login_page_loader.visibility = View.VISIBLE
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Проверяю данные пользователя...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
 
         GlobalScope.launch(Dispatchers.IO) {
 
@@ -72,8 +76,8 @@ class LoginActivity : AppCompatActivity() {
                 println("URL: $fetch_url")
 
                 launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
                     Toast.makeText(applicationContext, "Ошибка авторизации", Toast.LENGTH_LONG).show()
-                    login_page_loader.visibility = View.GONE
                 }
 
                 return@launch
@@ -82,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
             if (user != null) {
                 launch(Dispatchers.Main) {
 
-                    login_page_loader.visibility = View.GONE
+                    progressDialog.dismiss()
 
                     Log.i(MainActivity.TAG, "try .... to savedusers creds")
                     val sharedPref = this@LoginActivity.getPreferences(Context.MODE_PRIVATE)
@@ -92,7 +96,8 @@ class LoginActivity : AppCompatActivity() {
                         Log.i(MainActivity.TAG, "savedusers creds")
                         commit()
                     }
-                    R.string.nav_header_title
+
+                    MainActivity.currentUser = user
                     finish()
                 }
             }
