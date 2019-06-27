@@ -10,5 +10,6 @@ data class Order (
 
 data class OrderChild(
     val id: Int,
-    val title: String
+    val title: String,
+    val prefix_title: String
 )

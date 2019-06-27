@@ -627,7 +627,7 @@ class OrderItem(val order: Order): Item<ViewHolder>() {
         viewHolder.itemView.order_qnt_in_bill_orders_list.text = order.qnt.toString()
         var childsDescription = ""
         order.childs.forEach {
-            childsDescription = "${childsDescription} \n ${it.title}"
+            childsDescription = "${childsDescription} \n ${it.prefix_title} ${it.title}"
         }
         viewHolder.itemView.bill_view_childs.text = childsDescription
 
