@@ -338,23 +338,23 @@ class BillActivity : AppCompatActivity() {
             }
         }
 
-        selectedMenuEntity?.additionsNeed?.forEach {
-            client.use {
-                bill = it.post(save_url) {
-                    body = FormDataContent( // создаем параметры, которые будут переданы в form
-                        Parameters.build {
-                            append("bill_id", bill?.id.toString())
-                            append("menu_id", selectedMenuEntity?.id.toString())
-                            append("qnt", "1000")
-                            append("price", "0")
-                            append("price_discount", "0")
-                            append("price_fix", "1")
-                            append("id0", "1")
-                        }
-                    )
-                }
-            }
-        }
+//        selectedMenuEntity?.additionsNeed?.forEach {
+//            client.use {
+//                bill = it.post(save_url) {
+//                    body = FormDataContent( // создаем параметры, которые будут переданы в form
+//                        Parameters.build {
+//                            append("bill_id", bill?.id.toString())
+//                            append("menu_id", selectedMenuEntity?.id.toString())
+//                            append("qnt", "1000")
+//                            append("price", "0")
+//                            append("price_discount", "0")
+//                            append("price_fix", "1")
+//                            append("id0", "1")
+//                        }
+//                    )
+//                }
+//            }
+//        }
     }
 
 
