@@ -2,6 +2,7 @@ package com.example.cubswaitressapp.Pages
 
 import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -52,7 +53,7 @@ class HallwithTablesActivity : AppCompatActivity() {
 
     val fetch_url = "${MainActivity.serverBaseUrl}/halls/tables-in-hall"
 
-    var tables:List<Table> = emptyList()
+    var tables: List<Table> = emptyList()
 
     val adaptor = GroupAdapter<ViewHolder>()
 
@@ -75,6 +76,7 @@ class HallwithTablesActivity : AppCompatActivity() {
 
     private fun HttpRequestBuilder.fillHeadersCaseParameters() {
         parameter("hall_id", hall?.id)
+        parameter("personal_id", MainActivity.currentUser?.id)
     }
 
     fun fetchTablesAndUpdateUI() {
@@ -88,6 +90,8 @@ class HallwithTablesActivity : AppCompatActivity() {
             } catch (cause: Throwable) {
                 println("Error: $cause")
                 println("from url: $fetch_url")
+                println("hall_id ${hall?.id}")
+                println("personal_id ${MainActivity.currentUser?.id}")
 
                 launch(Dispatchers.Main) {
                     progressDialog?.dismiss()
@@ -100,7 +104,7 @@ class HallwithTablesActivity : AppCompatActivity() {
             launch(Dispatchers.Main) {
                 adaptor.clear()
                 for (table in tables) {
-                    adaptor.add(TableItem(table))
+                    adaptor.add(TableItem(table, hall))
                 }
 
                 progressDialog?.dismiss()
@@ -161,7 +165,7 @@ class HallwithTablesActivity : AppCompatActivity() {
 }
 
 
-class TableItem(val table: Table): Item<ViewHolder>() {
+class TableItem(val table: Table, val hall: Hall?): Item<ViewHolder>() {
 
     val adaptor = GroupAdapter<ViewHolder>()
 
@@ -189,6 +193,7 @@ class TableItem(val table: Table): Item<ViewHolder>() {
     private fun HttpRequestBuilder.fillHeadersCaseParameters() {
         parameter("table_id", table.id)
         parameter("personal_id", MainActivity.currentUser?.id)
+        parameter("hardware_id", MainActivity.currentHardwareID)
     }
 
     fun fetchBillAndUpdateUI(view: View) {
@@ -233,20 +238,29 @@ class TableItem(val table: Table): Item<ViewHolder>() {
     override fun bind(viewHolder: ViewHolder, position: Int) {
 
         viewHolder.itemView.table_in_list_view_table_number.text = table.number.toString()
-        viewHolder.itemView.table_in_list_view_total_sum.text = table.total
+        if (hall != null && hall.show_tables_total) {
+            viewHolder.itemView.table_in_list_view_total_sum.text = table.total
+        } else {
+            viewHolder.itemView.table_in_list_view_total_sum.text = ""
+        }
 
         table.bills.forEach { bill: TableBill ->
 
             adaptor.add(BillInTableItem(bill))
 
+            Log.i(HallwithTablesActivity.TAG, "Fetched bill in table  $bill")
         }
 
         adaptor.setOnItemClickListener { item, view ->
             val billItem = item as BillInTableItem
 
-            val intent = Intent(view.context, BillActivity::class.java)
-            intent.putExtra(BillActivity.BILL_KEY, billItem.bill)
-            startActivity(view.context, intent, null)
+            if (billItem.bill.isOpened && billItem.bill.editingHardwareID.toString() != MainActivity.currentHardwareID) {
+                Toast.makeText(view.context, "Счет открыт на другом терминале", Toast.LENGTH_LONG).show()
+            } else {
+                val intent = Intent(view.context, BillActivity::class.java)
+                intent.putExtra(BillActivity.BILL_KEY, billItem.bill)
+                startActivity(view.context, intent, null)
+            }
 
         }
 
@@ -271,6 +285,19 @@ class BillInTableItem(val bill: TableBill): Item<ViewHolder>() {
         viewHolder.itemView.bill_in_table_list_personal_name.text = bill.personalName
         viewHolder.itemView.bill_in_table_list_client_name.text = bill.clientsName
         viewHolder.itemView.bill_in_table_list_price.text = bill.total
+
+        if (bill.isPrinted) {
+            viewHolder.itemView.bill_in_table_list_number.text = "${viewHolder.itemView.bill_in_table_list_number.text} - распечатан "
+            viewHolder.itemView.bill_in_table_list_number.setTextColor(Color.RED)
+        } else {
+            viewHolder.itemView.bill_in_table_list_number.setTextColor(Color.BLACK)
+        }
+
+        if (bill.isOpened && bill.editingHardwareID.toString() != MainActivity.currentHardwareID) {
+            viewHolder.itemView.bill_in_table_view_container.setBackgroundColor(Color.parseColor("#4BF349EA"))
+        } else {
+            viewHolder.itemView.bill_in_table_view_container.setBackgroundColor(Color.parseColor("#107097A3"))
+        }
     }
 
     override fun getLayout(): Int {

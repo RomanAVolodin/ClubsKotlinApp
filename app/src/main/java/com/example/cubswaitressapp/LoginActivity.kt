@@ -3,6 +3,7 @@ package com.example.cubswaitressapp
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -26,9 +27,13 @@ import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
-    val fetch_url = "${MainActivity.serverBaseUrl}/users/auth"
+    var fetch_url = "${MainActivity.serverBaseUrl}/users/auth"
 
     var user: User? = null
+
+    companion object {
+        var mainActivity: MainActivity? = null
+    }
 
     suspend fun fetchUser() {
 
@@ -53,6 +58,7 @@ class LoginActivity : AppCompatActivity() {
             Parameters.build {
                 append("login", login_activity_username.text.toString())
                 append("password", login_activity_password.text.toString())
+                append("hardware_id", terminal_id_textfield_in_login_view.text.toString())
             }
         )
 
@@ -71,13 +77,17 @@ class LoginActivity : AppCompatActivity() {
 
                 fetchUser()
 
+                println("success")
+                println("URL: $fetch_url")
+
             } catch (cause: Throwable) {
-                println("Error: $cause")
+
+                Log.w("TEST", cause.message)
                 println("URL: $fetch_url")
 
                 launch(Dispatchers.Main) {
                     progressDialog.dismiss()
-                    Toast.makeText(applicationContext, "Ошибка авторизации", Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Ошибка авторизации или не тот терминал", Toast.LENGTH_LONG).show()
                 }
 
                 return@launch
@@ -93,11 +103,16 @@ class LoginActivity : AppCompatActivity() {
                     with (sharedPref.edit()) {
                         putString("user_pass", login_activity_password.text.toString())
                         putString("user_name", login_activity_username.text.toString())
+
+
+                        putString("ipAddress", ip_address_textfield_in_login_view.text.toString())
+                        putString("terminalID", terminal_id_textfield_in_login_view.text.toString())
                         Log.i(MainActivity.TAG, "savedusers creds")
                         commit()
                     }
 
                     MainActivity.currentUser = user
+
                     finish()
                 }
             }
@@ -114,6 +129,9 @@ class LoginActivity : AppCompatActivity() {
         val user_pass = sharedPref.getString("user_pass", "")
         val user_name = sharedPref.getString("user_name", "")
 
+        val ipAddress = sharedPref.getString("ipAddress", "")
+        val terminalID = sharedPref.getString("terminalID", "")
+
         Log.i(MainActivity.TAG, "try to get users creads user_pass: ${user_pass} user_name: ${user_name}")
 
         if (user_name != "" && user_pass != "") {
@@ -122,7 +140,34 @@ class LoginActivity : AppCompatActivity() {
 //            fetchUserAndUpdateUI()
         }
 
+        ip_address_textfield_in_login_view.setText(ipAddress)
+        terminal_id_textfield_in_login_view.setText(terminalID)
+
         login_page_loader.visibility = View.GONE
+
+
+        save_settings_button_in_login_view.setOnClickListener {
+            val ipAddress = ip_address_textfield_in_login_view.text.toString()
+            val terminalID = terminal_id_textfield_in_login_view.text.toString()
+
+            val sharedPref = this@LoginActivity.getPreferences(Context.MODE_PRIVATE)
+            with (sharedPref.edit()) {
+
+                putString("ipAddress", ip_address_textfield_in_login_view.text.toString())
+                putString("terminalID", terminal_id_textfield_in_login_view.text.toString())
+                Log.i(MainActivity.TAG, "settings saved")
+                commit()
+            }
+
+            MainActivity.currentHardwareID = terminal_id_textfield_in_login_view.text.toString()
+            MainActivity.serverBaseUrl = ip_address_textfield_in_login_view.text.toString()
+
+            settings_container_in_login_view.visibility = View.GONE
+        }
+
+        floatingActionButtonShowSettings.setOnClickListener {
+            settings_container_in_login_view.visibility = View.VISIBLE
+        }
 
         login_activity_login_button.setOnClickListener {
             hideKeyboard()
@@ -132,6 +177,18 @@ class LoginActivity : AppCompatActivity() {
 
             if (username.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Пожалуйста заполните все поля", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            val ipAddress = ip_address_textfield_in_login_view.text.toString()
+            val terminalID = terminal_id_textfield_in_login_view.text.toString()
+
+            fetch_url = "${ipAddress}/users/auth"
+            MainActivity.serverBaseUrl = ipAddress
+            MainActivity.currentHardwareID = terminalID
+
+            if (ipAddress.isEmpty() || terminalID.isEmpty()) {
+                Toast.makeText(this, "Пожалуйста заполните настройки", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 

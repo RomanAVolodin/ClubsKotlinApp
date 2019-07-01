@@ -13,6 +13,9 @@ class Table (
 @Parcelize
 data class TableBill (
     val id: Int,
+    val isPrinted: Boolean,
+    val isOpened: Boolean,
+    val editingHardwareID: Int,
     val number: Int,
     val total: String?,
     val personalName: String?,

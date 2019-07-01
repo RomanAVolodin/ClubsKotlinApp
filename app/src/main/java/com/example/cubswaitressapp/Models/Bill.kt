@@ -2,6 +2,9 @@ package com.example.cubswaitressapp.Models
 
 data class Bill (
     val id: Int,
+    val isPrinted: Boolean,
+    val isOpened: Boolean,
+    val editingHardwareID: Int,
     val hall_title: String,
     val hall_id: Int,
     val number: String,

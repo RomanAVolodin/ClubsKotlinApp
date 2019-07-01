@@ -27,8 +27,8 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.http.Parameters
 import kotlinx.android.synthetic.main.activity_bill.*
-import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.menu_entity_addition_item.view.*
+import kotlinx.android.synthetic.main.menu_entity_addition_type.view.*
 import kotlinx.android.synthetic.main.menu_entity_in_menu_bill_view.view.*
 import kotlinx.android.synthetic.main.menu_group_item_in_bill_view.view.*
 import kotlinx.android.synthetic.main.order_line_in_bill_view.view.*
@@ -43,11 +43,17 @@ class BillActivity : AppCompatActivity() {
         var BILL_KEY = "BILL_KEY"
     }
 
+    var updatingOrderId: Int? = null
+
     var lastSelectedIndex = -1
 
     var progressDialog: ProgressDialog? = null
 
     var selectedMenuEntity: MenuEntity? = null
+
+    var selectedMenuGroup = 0
+
+    var isHotkeysEnabled = true
 
     var tableBill: TableBill? = null
     var bill: Bill? = null
@@ -55,13 +61,16 @@ class BillActivity : AppCompatActivity() {
     var menu: List<MenuEntity> = emptyList()
 
     val fetch_url = "${MainActivity.serverBaseUrl}/bills/view"
-    val fetch_url_menu_groups = "${MainActivity.serverBaseUrl}/menu/group-menu"
+    val fetch_url_menu_groups = "${MainActivity.serverBaseUrl}/menu/group-menu" //
+    val fetch_url_menu_groups_hots = "${MainActivity.serverBaseUrl}/menu/hotkeys-in-hall"
     val fetch_url_menu= "${MainActivity.serverBaseUrl}/menu/menu-items-in-menu"
+    val finish_editing_bill_url= "${MainActivity.serverBaseUrl}/bills/finish-editing"
 
     val adaptor = GroupAdapter<ViewHolder>()
     val adaptorMenuGroups = GroupAdapter<ViewHolder>()
     val adaptorMenu = GroupAdapter<ViewHolder>()
     val adaptorAdditionItems = GroupAdapter<ViewHolder>()
+    val adaptorAdditionTypes= GroupAdapter<ViewHolder>()
 
     fun fetchMenuAndUpdateUI(group_id: Int) {
 
@@ -74,7 +83,12 @@ class BillActivity : AppCompatActivity() {
 
                     fetchMenuForGroup(group_id)
 
+
+
                 } catch (cause: Throwable) {
+                    println("gmenu_id  $group_id")
+                    println("hall_id ${bill?.hall_id}")
+                    println("isHotkeys ${isHotkeysEnabled.toString()}")
                     println("Error: $cause")
                     println("from url: $fetch_url_menu")
 
@@ -95,23 +109,102 @@ class BillActivity : AppCompatActivity() {
                     adaptorMenu.clear()
 
                     menu.forEach {
-                        adaptorMenu.add(MenuItem(it))
+                        adaptorMenu.add(MenuItem(it, bill))
                         Log.w(TAG, "Menu item: ${it}")
                     }
 
                     adaptorMenu.setOnItemClickListener { item, view ->
+
+                        menu_entity_amount_in_menu_entity_container.text = "1"
+
                         val menuEntityItem = item as com.example.cubswaitressapp.Pages.MenuItem
                         selectedMenuEntity = menuEntityItem.menuEntity
-                        menu_entity_container_in_bill_view.visibility = View.VISIBLE
-                        menu_entity_title_in_menu_entity_container.text = selectedMenuEntity?.name_button
-                        tab_item_menu_entity_need.callOnClick()
+                        updatingOrderId = null
+
+                        if (selectedMenuEntity?.additions?.first { it.isNeed }?.items?.count() == 0) {
+                            saveNewOrderAndUpdateUI()
+                            return@setOnItemClickListener
+                        }
+
+                        updateMenuEntityContainer()
+
                     }
+
 
                     loader_in_menu_view.visibility = View.GONE
                 }
 
 
         }
+    }
+
+    fun updateMenuEntityContainer() {
+
+        menu_entity_container_in_bill_view.visibility = View.VISIBLE
+        menu_entity_title_in_menu_entity_container.text = selectedMenuEntity?.name_button
+
+        adaptorAdditionTypes.clear()
+        adaptorAdditionItems.clear()
+
+        selectedMenuEntity?.additions?.forEach {
+            adaptorAdditionTypes.add(MenuEntityAdditiionTypeItem(it))
+        }
+
+        adaptorAdditionTypes.setOnItemClickListener { item, view ->
+            val menuEntityTypeItem = item as MenuEntityAdditiionTypeItem
+            val typeID = menuEntityTypeItem.additionType.id
+            val selectedAddition = selectedMenuEntity?.additions?.first {
+                it.id == typeID
+            }
+
+            var count = 0
+            selectedMenuEntity?.additions?.forEach {
+                it.isSelected = false
+                if (it == selectedAddition) {
+                    it.isSelected = true
+                }
+                adaptorAdditionTypes.notifyItemChanged(count)
+                count++
+            }
+
+
+            adaptorAdditionItems.clear()
+            selectedAddition?.items?.forEach {
+                adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
+            }
+
+            adaptorAdditionItems.setOnItemClickListener { item, view ->
+                val menuEntityItem = item as MenuEntityAdditiionItem
+                menuEntityItem.additionItem.isSelected = !menuEntityItem.additionItem.isSelected
+                val index = selectedAddition?.items?.indexOf(menuEntityItem.additionItem)
+                if (index != -1) {
+                    adaptorAdditionItems.notifyItemChanged(index!!)
+                }
+
+            }
+
+        }
+
+
+/////////начальная загрузка обязательных
+        val selectedAddition = selectedMenuEntity?.additions?.first {
+            it.isSelected
+        }
+        adaptorAdditionItems.clear()
+        selectedAddition?.items?.forEach {
+            adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
+        }
+        adaptorAdditionItems.setOnItemClickListener { item, view ->
+            val menuEntityItem = item as MenuEntityAdditiionItem
+            menuEntityItem.additionItem.isSelected = !menuEntityItem.additionItem.isSelected
+            val index = selectedAddition?.items?.indexOf(menuEntityItem.additionItem)
+            if (index != -1) {
+                adaptorAdditionItems.notifyItemChanged(index!!)
+            }
+
+        }
+/////////начальная загрузка обязательных
+
     }
 
     suspend fun fetchMenuForGroup(group_id: Int) {
@@ -126,7 +219,7 @@ class BillActivity : AppCompatActivity() {
             menu = it.get(fetch_url_menu) {
                 fillMenuHeadersCaseParameters(group_id)
             }
-
+            selectedMenuGroup = group_id
         }
 
     }
@@ -134,6 +227,7 @@ class BillActivity : AppCompatActivity() {
     private fun HttpRequestBuilder.fillMenuHeadersCaseParameters(group_id: Int) {
         parameter("gmenu_id", group_id)
         parameter("hall_id", bill?.hall_id)
+        parameter("isHotkeys", isHotkeysEnabled.toString())
     }
 
 
@@ -163,9 +257,14 @@ class BillActivity : AppCompatActivity() {
         }
 
         client.use {
-            menuGroups = it.get(fetch_url_menu_groups) {
+            var url = fetch_url_menu_groups
+
+            if (isHotkeysEnabled) url = fetch_url_menu_groups_hots
+
+            menuGroups = it.get(url) {
                 fillMenuGroupsHeadersCaseParameters(parent_id)
             }
+
 
         }
 
@@ -173,6 +272,7 @@ class BillActivity : AppCompatActivity() {
 
     private fun HttpRequestBuilder.fillMenuGroupsHeadersCaseParameters(parent_id: Int) {
         parameter("parent_id", parent_id)
+        parameter("hall_id", bill?.hall_id.toString())
     }
 
     fun fetchMenuGroupsAndUpdateUI(parent_id: Int = 0) {
@@ -185,7 +285,9 @@ class BillActivity : AppCompatActivity() {
 
             } catch (cause: Throwable) {
                 println("Error: $cause")
-                println("from url: $fetch_url")
+                println("from url: $fetch_url_menu_groups")
+                println("parent_id $parent_id")
+                println("hall_id ${bill?.hall_id.toString()}")
 
                 launch(Dispatchers.Main) {
                     Toast.makeText(applicationContext, "Ошибка при получении меню", Toast.LENGTH_LONG).show()
@@ -251,6 +353,7 @@ class BillActivity : AppCompatActivity() {
 
     private fun HttpRequestBuilder.fillHeadersCaseParameters() {
         parameter("bill_id", tableBill?.id)
+        parameter("hardware_id", MainActivity.currentHardwareID)
     }
 
     fun fetchBillAndUpdateUI() {
@@ -267,6 +370,7 @@ class BillActivity : AppCompatActivity() {
                 println("Error: $cause")
                 println("from url: $fetch_url")
                 println("id: ${tableBill?.id}")
+                println("\"hardware_id\", ${MainActivity.currentHardwareID}")
 
                 launch(Dispatchers.Main) {
                     progressDialog?.dismiss()
@@ -292,16 +396,43 @@ class BillActivity : AppCompatActivity() {
     private fun updateUIForBill() {
         adaptor.clear()
 
+        var count = 1
         for (order in bill!!.orders) {
             println("order:::::::::::::::::::: $order")
-            adaptor.add(OrderItem(order))
+            adaptor.add(OrderItem(order, count))
+            count++
         }
+
+        Log.i(TAG, "Just fetched bill ${bill}")
 
         bill_view_total.text = bill?.total.toString()
         bill_view_total_discount.text = bill?.total_discount.toString()
         bill_view_total_payment.text = bill?.total_payment.toString()
         bill_view_clientsName.text = bill?.clientsName
         bill_view_date_opened.text = "Открыт: ${bill?.opened}"
+
+        if (bill != null && bill!!.isPrinted) {
+            floatingActionButton_open_menu.setOnClickListener {
+                Toast.makeText(applicationContext, "Счет распечатан - редактирование не возможно", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            adaptor.setOnItemClickListener { item, view ->
+                val orderItem = item as OrderItem
+                val order = orderItem.order
+
+                Log.i(TAG, "Click on order ${order}")
+
+                selectedMenuEntity = order.menuEntity
+                updatingOrderId = order.id
+                menu_entity_amount_in_menu_entity_container.text = order.qnt.toString()
+
+                menu_entity_container_in_bill_view.visibility = View.VISIBLE
+
+                updateMenuEntityContainer()
+            }
+
+        }
+
     }
 
 
@@ -309,13 +440,13 @@ class BillActivity : AppCompatActivity() {
 
     suspend fun saveMenuEntitytoBill() {
 
-
         println("bill_id ${bill?.id.toString()}")
         println("menu_id ${selectedMenuEntity?.id.toString()}")
         println("qnt ${menu_entity_amount_in_menu_entity_container.text.toString()}")
         println("price ${selectedMenuEntity?.basePrice.toString()}")
         println("price_discount ${selectedMenuEntity?.actualPriceInHall.toString()}")
         println("price_fix 1")
+        println("updatingOrderId ${updatingOrderId.toString()}")
 
         val client = HttpClient(Android) {
             install(JsonFeature) {
@@ -333,28 +464,53 @@ class BillActivity : AppCompatActivity() {
                         append("price", selectedMenuEntity?.basePrice.toString())
                         append("price_discount", selectedMenuEntity?.actualPriceInHall.toString())
                         append("price_fix", "1")
+                        append("name_menu_add_id", "1")
+                        if (updatingOrderId != null) append("updatingOrderId", updatingOrderId.toString())
                     }
                 )
             }
         }
 
-//        selectedMenuEntity?.additionsNeed?.forEach {
-//            client.use {
-//                bill = it.post(save_url) {
-//                    body = FormDataContent( // создаем параметры, которые будут переданы в form
-//                        Parameters.build {
-//                            append("bill_id", bill?.id.toString())
-//                            append("menu_id", selectedMenuEntity?.id.toString())
-//                            append("qnt", "1000")
-//                            append("price", "0")
-//                            append("price_discount", "0")
-//                            append("price_fix", "1")
-//                            append("id0", "1")
-//                        }
-//                    )
-//                }
-//            }
-//        }
+        selectedMenuEntity?.additions?.forEach { additionType ->
+            val lastIdOfOrder = bill?.orders?.last()?.id
+            additionType.items.forEach { menuEntityAddition ->
+                if (menuEntityAddition.isSelected) {
+
+                    println("id0 ${lastIdOfOrder.toString()}")
+                    println("bill_id ${bill?.id.toString()}")
+                    println("menu_id ${menuEntityAddition.id.toString()}")
+                    println("qnt 1")
+                    println("price 1")
+                    println("price_discount 1")
+                    println("price_fix 1")
+                    println("name_menu_add_id ${additionType.id.toString()}")
+
+                    val client = HttpClient(Android) {
+                        install(JsonFeature) {
+                            serializer = GsonSerializer()
+                        }
+                    }
+
+                    client.use {
+                        bill = it.post(save_url) {
+                            body = FormDataContent( // создаем параметры, которые будут переданы в form
+                                Parameters.build {
+                                    append("id0", lastIdOfOrder.toString())
+                                    append("bill_id", bill?.id.toString())
+                                    append("menu_id", menuEntityAddition.id.toString())
+                                    append("qnt", "1")
+                                    append("price", "1")
+                                    append("price_discount", "1")
+                                    append("price_fix", "1")
+                                    append("name_menu_add_id", additionType.id.toString())
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
 
@@ -392,6 +548,10 @@ class BillActivity : AppCompatActivity() {
                 updateUIForBill()
 
                 Log.i(TAG, "Updated bill: $bill")
+
+                close_menu_entity_button_in_bill_view.callOnClick()
+
+                fetchMenuAndUpdateUI(selectedMenuGroup)
                 //menu_container_in_bill_activity.callOnClick()
             }
 
@@ -407,6 +567,9 @@ class BillActivity : AppCompatActivity() {
         tableBill = intent.getParcelableExtra<TableBill>(BILL_KEY)
 
         supportActionBar?.title = "Счет № ${tableBill?.number.toString()}"
+        if (tableBill != null && tableBill!!.isPrinted) {
+            supportActionBar?.title = "Счет № ${tableBill?.number.toString()} - распечатан"
+        }
         supportActionBar?.subtitle = "${tableBill?.personalName}"
 
 
@@ -424,6 +587,9 @@ class BillActivity : AppCompatActivity() {
         additions_recycler_view_in_bill_view.adapter = adaptorAdditionItems
         additions_recycler_view_in_bill_view.setLayoutManager(GridLayoutManager(null, 3))
 
+        addition_types_recycler_view_in_bill_view.adapter = adaptorAdditionTypes
+        addition_types_recycler_view_in_bill_view.setLayoutManager(GridLayoutManager(null, 5))
+
         fetchBillAndUpdateUI()
 
         menu_container_in_bill_activity.setOnClickListener {
@@ -439,15 +605,23 @@ class BillActivity : AppCompatActivity() {
             fetchMenuGroupsAndUpdateUI()
         }
 
+        toggleButton_hot_regular_menu_in_bill_view.setOnClickListener {
+            isHotkeysEnabled = !isHotkeysEnabled
+            fetchMenuGroupsAndUpdateUI()
+        }
+
         close_menu_entity_button_in_bill_view.setOnClickListener {
             menu_entity_container_in_bill_view.visibility = View.GONE
         }
 
 
         save_menu_entity_button_in_bill_view.setOnClickListener {
-            if (selectedMenuEntity?.additionsNeed != null && selectedMenuEntity?.additionsNeed!!.count() > 0) {
+            val needAdditions = selectedMenuEntity?.additions?.first {
+                it.isNeed
+            }
+            if (needAdditions?.items != null && needAdditions.items.count() > 0) {
 
-                if (selectedMenuEntity?.additionsNeed!!.indexOfFirst { it.isSelected == true } != -1){
+                if (needAdditions.items.indexOfFirst { it.isSelected == true } != -1){
                     saveNewOrderAndUpdateUI()
 
                 } else {
@@ -476,106 +650,54 @@ class BillActivity : AppCompatActivity() {
             selectedMenuEntity?.amount = amount
         }
 
-        tab_item_menu_entity_one.setOnClickListener {
-            tab_item_menu_entity_need.isChecked = false
-            tab_item_menu_entity_no.isChecked = false
-            tab_item_menu_entity_time.isChecked = false
-            tab_item_menu_entity_one.isChecked = true
-
-            adaptorAdditionItems.clear()
-            selectedMenuEntity?.additionsOne?.forEach {
-                adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
-                println("Addition: $it")
-            }
-
-            adaptorAdditionItems.setOnItemClickListener { item, view ->
-                val menuAdditionItem = item as MenuEntityAdditiionItem
-                menuAdditionItem.isSelected = !menuAdditionItem.isSelected
-                if (selectedMenuEntity?.additionsOne != null) {
-                    val index = selectedMenuEntity?.additionsOne!!.indexOfFirst {
-                        it.id == item.additionItem.id
-                    }
-                    selectedMenuEntity?.additionsOne!![index].isSelected = !selectedMenuEntity?.additionsOne!![index].isSelected
-                    adaptorAdditionItems.notifyItemChanged(index)
-                }
-            }
-        }
-
-        tab_item_menu_entity_no.setOnClickListener {
-            tab_item_menu_entity_need.isChecked = false
-            tab_item_menu_entity_no.isChecked = true
-            tab_item_menu_entity_time.isChecked = false
-            tab_item_menu_entity_one.isChecked = false
-            adaptorAdditionItems.clear()
-            selectedMenuEntity?.additionsNo?.forEach {
-                adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
-                println("Addition: $it")
-            }
-
-            adaptorAdditionItems.setOnItemClickListener { item, view ->
-                val menuAdditionItem = item as MenuEntityAdditiionItem
-                menuAdditionItem.isSelected = !menuAdditionItem.isSelected
-                if (selectedMenuEntity?.additionsNo != null) {
-                    val index = selectedMenuEntity?.additionsNo!!.indexOfFirst {
-                        it.id == item.additionItem.id
-                    }
-                    selectedMenuEntity?.additionsNo!![index].isSelected = !selectedMenuEntity?.additionsNo!![index].isSelected
-                    adaptorAdditionItems.notifyItemChanged(index)
-                }
-            }
-        }
-
-        tab_item_menu_entity_need.setOnClickListener {
-            tab_item_menu_entity_need.isChecked = true
-            tab_item_menu_entity_no.isChecked = false
-            tab_item_menu_entity_time.isChecked = false
-            tab_item_menu_entity_one.isChecked = false
-            adaptorAdditionItems.clear()
-            selectedMenuEntity?.additionsNeed?.forEach {
-                adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
-                println("Addition: $it")
-            }
-
-            adaptorAdditionItems.setOnItemClickListener { item, view ->
-                val menuAdditionItem = item as MenuEntityAdditiionItem
-                menuAdditionItem.isSelected = !menuAdditionItem.isSelected
-                if (selectedMenuEntity?.additionsNeed != null) {
-                    val index = selectedMenuEntity?.additionsNeed!!.indexOfFirst {
-                        it.id == item.additionItem.id
-                    }
-                    selectedMenuEntity?.additionsNeed!![index].isSelected = !selectedMenuEntity?.additionsNeed!![index].isSelected
-                    adaptorAdditionItems.notifyItemChanged(index)
-                }
-            }
-        }
-
-        tab_item_menu_entity_time.setOnClickListener {
-            tab_item_menu_entity_need.isChecked = false
-            tab_item_menu_entity_no.isChecked = false
-            tab_item_menu_entity_time.isChecked = true
-            tab_item_menu_entity_one.isChecked = false
-            adaptorAdditionItems.clear()
-            selectedMenuEntity?.additionsTime?.forEach {
-                adaptorAdditionItems.add(MenuEntityAdditiionItem(it))
-                println("Addition: $it")
-            }
-
-            adaptorAdditionItems.setOnItemClickListener { item, view ->
-                val menuAdditionItem = item as MenuEntityAdditiionItem
-                menuAdditionItem.isSelected = !menuAdditionItem.isSelected
-                if (selectedMenuEntity?.additionsTime != null) {
-                    val index = selectedMenuEntity?.additionsTime!!.indexOfFirst {
-                        it.id == item.additionItem.id
-                    }
-                    selectedMenuEntity?.additionsTime!![index].isSelected = !selectedMenuEntity?.additionsTime!![index].isSelected
-                    adaptorAdditionItems.notifyItemChanged(index)
-                }
-            }
-        }
 
 
     }
 
+
+    suspend fun finishEditing() {
+
+        val client = HttpClient(Android) {
+            install(JsonFeature) {
+                serializer = GsonSerializer()
+            }
+        }
+
+        client.use {
+            var url = finish_editing_bill_url
+
+            bill = it.get(url) {
+                parameter("bill_id", bill?.id)
+            }
+
+        }
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                finishEditing()
+
+            } catch (cause: Throwable) {
+                println("Error: $cause")
+                println("from url: $finish_editing_bill_url")
+                println("bill_id: ${bill?.id}")
+
+                launch(Dispatchers.Main) {
+                    loader_in_menu_view.visibility = View.GONE
+                    Toast.makeText(applicationContext, "Ошибка при завершении работы со счетом", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+        }
+
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu to use in the action bar
@@ -595,6 +717,23 @@ class BillActivity : AppCompatActivity() {
     }
 }
 
+class MenuEntityAdditiionTypeItem(val additionType: MenuAdditionType): Item<ViewHolder>() {
+
+    override fun bind(viewHolder: ViewHolder, position: Int) {
+        viewHolder.itemView.addition_type_button_in_bill_view.text = additionType.name_button
+
+        if (additionType.isSelected) {
+            viewHolder.itemView.addition_type_container_in_bill_view.setBackgroundColor(Color.RED)
+        } else {
+            viewHolder.itemView.addition_type_container_in_bill_view.setBackgroundColor(Color.WHITE)
+        }
+    }
+
+    override fun getLayout(): Int {
+        return R.layout.menu_entity_addition_type
+    }
+
+}
 
 class MenuEntityAdditiionItem(val additionItem: MenuEntityAddition): Item<ViewHolder>() {
 
@@ -604,7 +743,7 @@ class MenuEntityAdditiionItem(val additionItem: MenuEntityAddition): Item<ViewHo
 
         isSelected = additionItem.isSelected
 
-        viewHolder.itemView.addition_item_name_in_addition_items_recycler_view.text = additionItem.name_button
+        viewHolder.itemView.addition_item_name_in_addition_items_recycler_view.text = additionItem.name
 
         if (isSelected) {
             viewHolder.itemView.addition_item_container_in_addition_items_recycler_view.setBackgroundColor(Color.RED)
@@ -619,9 +758,10 @@ class MenuEntityAdditiionItem(val additionItem: MenuEntityAddition): Item<ViewHo
 
 }
 
-class OrderItem(val order: Order): Item<ViewHolder>() {
+class OrderItem(val order: Order, val count: Int): Item<ViewHolder>() {
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
+        viewHolder.itemView.order_count_in_bill_orders_list.text = count.toString()
         viewHolder.itemView.order_name_in_bill_orders_list.text = order.menu_item
         viewHolder.itemView.order_price_in_bill_orders_list.text = order.price
         viewHolder.itemView.order_qnt_in_bill_orders_list.text = order.qnt.toString()
@@ -667,12 +807,27 @@ class MenuGroupItem(val menuGroup: MenuGroup): Item<ViewHolder>() {
 
 }
 
-class MenuItem(val menuEntity: MenuEntity): Item<ViewHolder>() {
+class MenuItem(val menuEntity: MenuEntity, val bill: Bill?): Item<ViewHolder>() {
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
         viewHolder.itemView.menu_entity_title_in_bill_view.text = menuEntity.name_button
         viewHolder.itemView.menu_entity_price_in_bill_view.text = menuEntity.actualPriceInHall.toString()
+        var amountAlreadyOrdered: Double = 0.toDouble()
+        bill?.orders?.forEach { order ->
+            if (order.menu_item_id == menuEntity.id) {
+                amountAlreadyOrdered += order.qnt
+            }
+        }
 
+        Log.i(BillActivity.TAG, "Какая-то херня $bill")
+
+        if (amountAlreadyOrdered > 0 ) {
+            viewHolder.itemView.menu_entity_amount_in_bill_view.text = amountAlreadyOrdered.toString()
+            viewHolder.itemView.menu_entity_amount_in_bill_view.visibility = View.VISIBLE
+        } else {
+            viewHolder.itemView.menu_entity_amount_in_bill_view.text = ""
+            viewHolder.itemView.menu_entity_amount_in_bill_view.visibility = View.GONE
+        }
     }
 
     override fun getLayout(): Int {

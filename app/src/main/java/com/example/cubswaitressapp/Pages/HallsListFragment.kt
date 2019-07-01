@@ -24,6 +24,7 @@ import io.ktor.client.engine.android.Android
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter
 import jp.wasabeef.recyclerview.adapters.ScaleInAnimationAdapter
 import jp.wasabeef.recyclerview.animators.SlideInLeftAnimator
@@ -57,7 +58,9 @@ class HallsListFragment : androidx.fragment.app.Fragment() {
         }
 
         client.use {
-            halls = it.get(fetch_url)
+            halls = it.get(fetch_url) {
+                parameter("user_id", MainActivity.currentUser?.id)
+            }
         }
 
     }
@@ -77,6 +80,8 @@ class HallsListFragment : androidx.fragment.app.Fragment() {
 
             } catch (cause: Throwable) {
                 println("Error: $cause")
+                println("Error: $fetch_url")
+                println("user_id ${MainActivity.currentUser?.id}")
 
                 launch(Dispatchers.Main) {
                     progressDialog.dismiss()

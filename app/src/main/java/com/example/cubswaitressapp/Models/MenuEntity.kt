@@ -5,15 +5,22 @@ data class MenuEntity (
     val name_button: String,
     val basePrice: Int,
     val actualPriceInHall: Int,
-    val additionsOne: List<MenuEntityAddition>,
-    val additionsNo: List<MenuEntityAddition>,
-    val additionsTime: List<MenuEntityAddition>,
-    val additionsNeed: List<MenuEntityAddition>,
+    val deleted: Boolean,
+    val additions: List<MenuAdditionType>,
     var amount: Double
+)
+
+data class MenuAdditionType (
+    val id: Int,
+    val isNeed: Boolean,
+    var isSelected: Boolean = false,
+    val name: String,
+    val name_button: String,
+    val items: List<MenuEntityAddition>
 )
 
 data class MenuEntityAddition(
     val id: Int,
-    val name_button: String,
+    val name: String,
     var isSelected: Boolean = false
 )

@@ -3,6 +3,7 @@ package com.example.cubswaitressapp
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -14,7 +15,9 @@ import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.Menu
+import android.view.View
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.example.cubswaitressapp.Models.User
 import com.example.cubswaitressapp.Pages.HallsListFragment
 import kotlinx.android.synthetic.main.activity_login.*
@@ -25,7 +28,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     companion object {
         val TAG = "MainPageActivity"
         var currentUser: User? = null
-        val serverBaseUrl = "http://backend.zavods.net"
+        var currentHardwareID  = ""
+        var serverBaseUrl = ""
         val updateTimer: Long = 5000
     }
 
@@ -53,8 +57,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         navView.setNavigationItemSelectedListener(this)
 
+
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.i(TAG, "Started ACTIVITY")
+        showHallsFragment()
+    }
 
     override fun onBackPressed() {
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
@@ -91,13 +101,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Handle navigation view item clicks here.
         when (item.itemId) {
             R.id.nav_home -> {
-                val meetingPage = HallsListFragment.newInstance()
-                replaceFragmenty(
-                    fragment = meetingPage as androidx.fragment.app.Fragment,
-                    allowStateLoss = true,
-                    containerViewId = R.id.mainContent
-                )
-                setTitle("Залы")
+                showHallsFragment()
             }
             R.id.nav_gallery -> {
 
@@ -118,6 +122,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    fun showHallsFragment() {
+        val meetingPage = HallsListFragment.newInstance()
+        replaceFragmenty(
+            fragment = meetingPage as Fragment,
+            allowStateLoss = true,
+            containerViewId = R.id.mainContent
+        )
+        setTitle("Залы")
     }
 
     private fun verifyIfUserIsLoggedin() {
