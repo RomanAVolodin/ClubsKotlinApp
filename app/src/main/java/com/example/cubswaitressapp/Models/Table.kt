@@ -14,6 +14,7 @@ class Table (
 data class TableBill (
     val id: Int,
     val isPrinted: Boolean,
+    val guests: Int,
     val isOpened: Boolean,
     val editingHardwareID: Int,
     val number: Int,

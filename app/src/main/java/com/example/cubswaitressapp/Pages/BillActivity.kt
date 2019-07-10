@@ -1,6 +1,8 @@
 package com.example.cubswaitressapp.Pages
 
+import android.app.Activity
 import android.app.ProgressDialog
+import android.content.Context
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -8,6 +10,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.cubswaitressapp.MainActivity
@@ -65,6 +68,10 @@ class BillActivity : AppCompatActivity() {
     val fetch_url_menu_groups_hots = "${MainActivity.serverBaseUrl}/menu/hotkeys-in-hall"
     val fetch_url_menu= "${MainActivity.serverBaseUrl}/menu/menu-items-in-menu"
     val finish_editing_bill_url= "${MainActivity.serverBaseUrl}/bills/finish-editing"
+    val delete_position_url= "${MainActivity.serverBaseUrl}/bills/delete-order"
+    val print_positions_url= "${MainActivity.serverBaseUrl}/bills/print-bill"
+    val print_orders_url= "${MainActivity.serverBaseUrl}/bills/print-orders"
+    val change_guests_amount_url= "${MainActivity.serverBaseUrl}/bills/amount-of-guests"
 
     val adaptor = GroupAdapter<ViewHolder>()
     val adaptorMenuGroups = GroupAdapter<ViewHolder>()
@@ -82,8 +89,6 @@ class BillActivity : AppCompatActivity() {
                 try {
 
                     fetchMenuForGroup(group_id)
-
-
 
                 } catch (cause: Throwable) {
                     println("gmenu_id  $group_id")
@@ -119,10 +124,18 @@ class BillActivity : AppCompatActivity() {
 
                         val menuEntityItem = item as com.example.cubswaitressapp.Pages.MenuItem
                         selectedMenuEntity = menuEntityItem.menuEntity
+
                         updatingOrderId = null
 
                         if (selectedMenuEntity?.additions?.first { it.isNeed }?.items?.count() == 0) {
                             saveNewOrderAndUpdateUI()
+
+                            item.newAmountAlreadyOrdered = item.amountAlreadyOrdered + 1
+                            val index = menu.indexOfFirst {
+                                it == menuEntityItem.menuEntity
+                            }
+                            adaptorMenu.notifyItemChanged(index)
+
                             return@setOnItemClickListener
                         }
 
@@ -397,10 +410,12 @@ class BillActivity : AppCompatActivity() {
         adaptor.clear()
 
         var count = 1
-        for (order in bill!!.orders) {
-            println("order:::::::::::::::::::: $order")
-            adaptor.add(OrderItem(order, count))
-            count++
+        if (bill != null) {
+            for (order in bill!!.orders) {
+                println("order:::::::::::::::::::: $order")
+                adaptor.add(OrderItem(order, count))
+                count++
+            }
         }
 
         Log.i(TAG, "Just fetched bill ${bill}")
@@ -410,6 +425,12 @@ class BillActivity : AppCompatActivity() {
         bill_view_total_payment.text = bill?.total_payment.toString()
         bill_view_clientsName.text = bill?.clientsName
         bill_view_date_opened.text = "Открыт: ${bill?.opened}"
+        amount_of_guests_text_view.text = bill?.guests.toString()
+        amount_of_guests_input_text_field.setText(bill?.guests.toString())
+
+        if (bill != null && bill!!.isGuestsNeed && bill!!.guests < 1) {
+            amount_of_guests_container.visibility = View.VISIBLE
+        }
 
         if (bill != null && bill!!.isPrinted) {
             floatingActionButton_open_menu.setOnClickListener {
@@ -551,8 +572,8 @@ class BillActivity : AppCompatActivity() {
 
                 close_menu_entity_button_in_bill_view.callOnClick()
 
-                fetchMenuAndUpdateUI(selectedMenuGroup)
-                //menu_container_in_bill_activity.callOnClick()
+                //fetchMenuAndUpdateUI(selectedMenuGroup)
+
             }
 
         }
@@ -593,6 +614,11 @@ class BillActivity : AppCompatActivity() {
         fetchBillAndUpdateUI()
 
         menu_container_in_bill_activity.setOnClickListener {
+            menu_container_in_bill_activity.visibility = View.GONE
+            menu_entity_container_in_bill_view.visibility = View.GONE
+        }
+
+        close_menu_button_in_bill_view.setOnClickListener {
             menu_container_in_bill_activity.visibility = View.GONE
             menu_entity_container_in_bill_view.visibility = View.GONE
         }
@@ -652,8 +678,216 @@ class BillActivity : AppCompatActivity() {
 
 
 
+        delete_order_button_in_bill_view.setOnClickListener {
+            deleteSelectedOrder()
+        }
+
+        print_bill_button_in_bill_view.setOnClickListener {
+            printBillAndExit()
+        }
+
+        print_orders_button_in_bill_view.setOnClickListener {
+            printOrdersAndExit()
+        }
+
+        guests_amount_floatingActionButton.setOnClickListener {
+            amount_of_guests_container.visibility = View.VISIBLE
+        }
+
+        amount_of_guests_submit_button.setOnClickListener {
+            changeAmountOfGuestsinBill()
+        }
+
     }
 
+    fun changeAmountOfGuestsinBill() {
+
+        hideKeyboard()
+
+        if (amount_of_guests_input_text_field.text.isEmpty()) {
+            Toast.makeText(applicationContext, "Укажите значение большее 0", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val amount_of_guests = amount_of_guests_input_text_field.text.toString().toInt()
+        if (amount_of_guests <= 0) {
+            Toast.makeText(applicationContext, "Укажите значение большее 0", Toast.LENGTH_SHORT).show()
+            return
+        }
+        amount_of_guests_container.visibility = View.GONE
+
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Обновляю счет...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                val client = HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = GsonSerializer()
+                    }
+                }
+
+                println("amount by url ${change_guests_amount_url}")
+                println("amount by bill_idl ${bill?.id.toString()}")
+
+                client.use {
+                    bill = it.get(change_guests_amount_url) {
+                        parameter("bill_id", bill?.id.toString())
+                        parameter("amount_of_guests", amount_of_guests.toString())
+                    }
+                }
+
+            } catch (cause: Throwable) {
+
+                launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(applicationContext, "Ошибка при изменении счета", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+
+            launch(Dispatchers.Main) {
+                progressDialog.dismiss()
+                updateUIForBill()
+            }
+
+        }
+    }
+
+    fun printOrdersAndExit() {
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Печатаю заказы...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                val client = HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = GsonSerializer()
+                    }
+                }
+
+                println("printing by url ${print_orders_url}")
+                println("printing by bill_idl ${bill?.id.toString()}")
+                println("printing by hardware_from_id ${MainActivity.currentHardwareID.toString()}")
+
+                client.use {
+                    bill = it.get(print_orders_url) {
+                        parameter("bill_id", bill?.id.toString())
+                        parameter("hardware_from_id", MainActivity.currentHardwareID)
+                    }
+                }
+
+            } catch (cause: Throwable) {
+
+                launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(applicationContext, "Ошибка при печати заказов", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+
+            launch(Dispatchers.Main) {
+                progressDialog.dismiss()
+                updateUIForBill()
+            }
+
+        }
+    }
+
+    fun printBillAndExit() {
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Печатаю счет...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                val client = HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = GsonSerializer()
+                    }
+                }
+
+                println("printing by url ${print_positions_url}")
+                println("printing by bill_idl ${bill?.id.toString()}")
+                println("printing by hardware_from_id ${MainActivity.currentHardwareID.toString()}")
+                println("printing by personal_id ${MainActivity.currentUser?.id.toString()}")
+
+                client.use {
+                    bill = it.get(print_positions_url) {
+                        parameter("bill_id", bill?.id.toString())
+                        parameter("hardware_from_id", MainActivity.currentHardwareID)
+                        parameter("personal_id", MainActivity.currentUser?.id.toString())
+                    }
+                }
+
+            } catch (cause: Throwable) {
+
+                launch(Dispatchers.Main) {
+                    progressDialog.dismiss()
+                    Toast.makeText(applicationContext, "Ошибка при печати счета", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+
+            launch(Dispatchers.Main) {
+                progressDialog.dismiss()
+                updateUIForBill()
+            }
+
+        }
+    }
+
+    fun deleteSelectedOrder() {
+        menu_entity_container_in_bill_view.visibility = View.GONE
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            try {
+
+                val client = HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = GsonSerializer()
+                    }
+                }
+
+                println("deleting by url ${delete_position_url}")
+                println("order_id by url ${updatingOrderId.toString()}")
+
+                client.use {
+                    bill = it.get(delete_position_url) {
+                        parameter("order_id", updatingOrderId.toString())
+                    }
+                }
+
+            } catch (cause: Throwable) {
+
+                launch(Dispatchers.Main) {
+                    Toast.makeText(applicationContext, "Ошибка при удалении заказа", Toast.LENGTH_LONG).show()
+                }
+
+                return@launch
+            }
+
+            launch(Dispatchers.Main) {
+                updateUIForBill()
+            }
+
+        }
+    }
 
     suspend fun finishEditing() {
 
@@ -715,6 +949,20 @@ class BillActivity : AppCompatActivity() {
             else -> return super.onOptionsItemSelected(item)
         }
     }
+
+
+    fun androidx.fragment.app.Fragment.hideKeyboard() {
+        view?.let { activity?.hideKeyboard(it) }
+    }
+
+    fun Activity.hideKeyboard() {
+        hideKeyboard(if (currentFocus == null) View(this) else currentFocus)
+    }
+
+    fun Context.hideKeyboard(view: View) {
+        val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 }
 
 class MenuEntityAdditiionTypeItem(val additionType: MenuAdditionType): Item<ViewHolder>() {
@@ -761,7 +1009,7 @@ class MenuEntityAdditiionItem(val additionItem: MenuEntityAddition): Item<ViewHo
 class OrderItem(val order: Order, val count: Int): Item<ViewHolder>() {
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
-        viewHolder.itemView.order_count_in_bill_orders_list.text = count.toString()
+//        viewHolder.itemView.order_count_in_bill_orders_list.text = count.toString()
         viewHolder.itemView.order_name_in_bill_orders_list.text = order.menu_item
         viewHolder.itemView.order_price_in_bill_orders_list.text = order.price
         viewHolder.itemView.order_qnt_in_bill_orders_list.text = order.qnt.toString()
@@ -770,6 +1018,14 @@ class OrderItem(val order: Order, val count: Int): Item<ViewHolder>() {
             childsDescription = "${childsDescription} \n ${it.prefix_title} ${it.title}"
         }
         viewHolder.itemView.bill_view_childs.text = childsDescription
+
+        if (order.isPrinted) {
+            viewHolder.itemView.order_qnt_in_bill_orders_list.setBackgroundColor(Color.RED)
+            viewHolder.itemView.order_qnt_in_bill_orders_list.setTextColor(Color.WHITE)
+        } else {
+            viewHolder.itemView.order_qnt_in_bill_orders_list.setBackgroundColor(Color.WHITE)
+            viewHolder.itemView.order_qnt_in_bill_orders_list.setTextColor(Color.BLACK)
+        }
 
     }
 
@@ -809,10 +1065,13 @@ class MenuGroupItem(val menuGroup: MenuGroup): Item<ViewHolder>() {
 
 class MenuItem(val menuEntity: MenuEntity, val bill: Bill?): Item<ViewHolder>() {
 
+    var amountAlreadyOrdered: Double = 0.toDouble()
+    var newAmountAlreadyOrdered: Double = 0.toDouble()
+
     override fun bind(viewHolder: ViewHolder, position: Int) {
         viewHolder.itemView.menu_entity_title_in_bill_view.text = menuEntity.name_button
         viewHolder.itemView.menu_entity_price_in_bill_view.text = menuEntity.actualPriceInHall.toString()
-        var amountAlreadyOrdered: Double = 0.toDouble()
+
         bill?.orders?.forEach { order ->
             if (order.menu_item_id == menuEntity.id) {
                 amountAlreadyOrdered += order.qnt
@@ -820,6 +1079,10 @@ class MenuItem(val menuEntity: MenuEntity, val bill: Bill?): Item<ViewHolder>() 
         }
 
         Log.i(BillActivity.TAG, "Какая-то херня $bill")
+
+        if (newAmountAlreadyOrdered > 0) {
+            amountAlreadyOrdered = newAmountAlreadyOrdered
+        }
 
         if (amountAlreadyOrdered > 0 ) {
             viewHolder.itemView.menu_entity_amount_in_bill_view.text = amountAlreadyOrdered.toString()

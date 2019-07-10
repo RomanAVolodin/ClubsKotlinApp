@@ -4,6 +4,7 @@ data class Order (
     val id: Int,
     val menu_item_id: Int,
     val menu_item: String,
+    val isPrinted: Boolean,
     val qnt: Double,
     val price: String,
     val childs: List<OrderChild>,
