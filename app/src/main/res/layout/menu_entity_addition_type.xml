@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
     <androidx.cardview.widget.CardView
-            android:layout_margin="8dp"
+            android:id="@+id/addition_type_container_in_bill_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" android:id="@+id/addition_type_container_in_bill_view">
+            android:layout_height="match_parent"
+            android:layout_margin="8dp">
+
         <TextView
-                android:text="TextView"
+                android:id="@+id/addition_type_button_in_bill_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" android:id="@+id/addition_type_button_in_bill_view"
-                android:gravity="center" android:textSize="10sp"/>
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="TextView"
+                android:textAllCaps="true"
+                android:textColor="#090909"
+                android:textSize="12sp"
+                android:textStyle="bold" />
     </androidx.cardview.widget.CardView>
 </LinearLayout>

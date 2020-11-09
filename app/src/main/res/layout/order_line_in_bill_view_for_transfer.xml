@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        app:cardCornerRadius="5dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/materialCardView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:id="@+id/order_name_in_bill_orders_list"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:text="название заказа"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/order_price_in_bill_orders_list"
+                app:layout_constraintStart_toEndOf="@+id/order_qnt_in_bill_orders_list"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+                android:id="@+id/order_qnt_in_bill_orders_list"
+                android:layout_width="48dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="43" />
+
+        <TextView
+                android:id="@+id/order_price_in_bill_orders_list"
+                android:layout_width="64dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:gravity="right"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="сумма" />
+
+        <TextView
+                android:id="@+id/bill_view_childs"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="right"
+                android:textColor="@color/design_default_color_primary_dark"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="@+id/order_name_in_bill_orders_list"
+                app:layout_constraintStart_toStartOf="@+id/order_name_in_bill_orders_list"
+                app:layout_constraintTop_toBottomOf="@+id/order_name_in_bill_orders_list"
+                tools:text="добавки и прочее" />
+
+        <ImageView
+                android:id="@+id/increase_amount_of_order_in_transfer"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:layout_constraintEnd_toEndOf="@+id/order_qnt_in_bill_orders_list"
+                app:layout_constraintStart_toStartOf="@+id/order_qnt_in_bill_orders_list"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@android:drawable/arrow_up_float" />
+
+        <ImageView
+                android:id="@+id/decrease_amount_of_order_in_transfer"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/order_qnt_in_bill_orders_list"
+                app:layout_constraintEnd_toEndOf="@+id/order_qnt_in_bill_orders_list"
+                app:layout_constraintStart_toStartOf="@+id/order_qnt_in_bill_orders_list"
+                app:srcCompat="@android:drawable/arrow_down_float" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

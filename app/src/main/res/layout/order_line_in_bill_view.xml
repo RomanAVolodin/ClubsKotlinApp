@@ -31,22 +31,55 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
                 android:padding="5dp"/>
+
         <TextView
+                android:id="@+id/order_price_in_bill_orders_list"
                 android:layout_width="64dp"
-                android:layout_height="wrap_content" android:id="@+id/order_price_in_bill_orders_list"
-                android:layout_weight="1" tools:text="сумма" android:gravity="right"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:layout_constraintTop_toTopOf="parent" android:layout_marginEnd="8dp"
-                app:layout_constraintEnd_toEndOf="parent" android:layout_marginRight="8dp"/>
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="сумма" />
+
         <TextView
+                android:id="@+id/bill_view_childs"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/bill_view_childs"
-                app:layout_constraintTop_toBottomOf="@+id/order_name_in_bill_orders_list"
+                android:layout_marginTop="8dp"
+                android:gravity="left"
+                android:textColor="@color/design_default_color_primary_dark"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="@+id/order_name_in_bill_orders_list"
                 app:layout_constraintStart_toStartOf="@+id/order_name_in_bill_orders_list"
-                app:layout_constraintEnd_toEndOf="@+id/order_name_in_bill_orders_list" android:layout_marginTop="8dp"
-                tools:text="добавки и прочее" android:gravity="right" android:textSize="12sp"
-                android:textColor="@color/design_default_color_primary_dark"/>
+                app:layout_constraintTop_toBottomOf="@+id/order_name_in_bill_orders_list"
+                tools:text="добавки и прочее" />
+
+        <TextView
+                android:id="@+id/order_price_base_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="10sp"
+                app:layout_constraintEnd_toEndOf="@+id/order_price_in_bill_orders_list"
+                app:layout_constraintTop_toBottomOf="@+id/order_price_in_bill_orders_list"
+                tools:text="base_price" />
+
+        <TextView
+                android:id="@+id/order_price_discount_percentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:textSize="10sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/order_price_base_price"
+                app:layout_constraintTop_toBottomOf="@+id/order_price_base_price"
+                tools:text="TextView" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>
