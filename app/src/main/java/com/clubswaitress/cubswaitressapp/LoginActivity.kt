@@ -110,7 +110,6 @@ class LoginActivity : AppCompatActivity() {
 
                     progressDialog.dismiss()
 
-                    Log.i(MainActivity.TAG, "try .... to savedusers creds")
                     val sharedPref = this@LoginActivity.getPreferences(Context.MODE_PRIVATE)
                     with (sharedPref.edit()) {
                         putString("user_pass", login_activity_password.text.toString())

@@ -1,5 +1,6 @@
 package com.clubswaitress.cubswaitressapp
 
+import android.app.PendingIntent.getActivity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -23,6 +24,7 @@ public open class ActivityListener: AppCompatActivity() {
 
     var handler = Handler()
 
+
     var r  = Runnable {
         inactivityAction()
     }
@@ -34,8 +36,6 @@ public open class ActivityListener: AppCompatActivity() {
         val intent = Intent(applicationContext, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
-
-        MainActivity.currentUser = null
         finish()
     }
 
@@ -49,18 +49,32 @@ public open class ActivityListener: AppCompatActivity() {
 
     override fun onDestroy() {
         stopHandler()
-        Log.w("ActivityListener", "---------------   DESTROY DETECTOR ---------------------------")
+        Log.w("ActivityListener", "---------------   DESTROY DETECTOR ${localClassName}---------------------------")
         super.onDestroy()
     }
 
 
     override fun onStop() {
-        stopHandler()
-        Log.w("ActivityListener", "---------------   STOP DETECTOR ---------------------------")
+//        activity.getWindow().getDecorView().getRootView().isShown()
+//        val isVisible = this.window.decorView.isShown
+        if (MainActivity.isTimerOfActivityEnabled) {
+            stopHandler()
+            Log.w("ActivityListener", "--------------- STOP DETECTOR ${localClassName}---------------------------")
+        }
+
         super.onStop()
     }
 
+    override fun onPause() {
+        Log.w("ActivityListener", "--------------- ON PAUSE ${localClassName}---------------------------")
+        MainActivity.isTimerOfActivityEnabled = false
+        super.onPause()
+    }
+
+
     override fun onStart() {
+        Log.w("ActivityListener", "---------------   RESTART DETECTOR ${localClassName}---------------------------")
+        MainActivity.isTimerOfActivityEnabled = true
         stopHandler()
         startHandler()
         super.onStart()
@@ -73,6 +87,7 @@ public open class ActivityListener: AppCompatActivity() {
 
     open fun stopHandler() {
         handler.removeCallbacks(r)
+//        MainActivity.handler = Handler()
     }
 
     open fun startHandler() {

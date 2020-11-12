@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -32,6 +33,8 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
         var serverBaseUrl = ""
         val updateTimer: Long = 1000
         var iddleBeforeExit: Long = 60000
+
+        var isTimerOfActivityEnabled = false
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
