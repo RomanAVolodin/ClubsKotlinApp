@@ -6,6 +6,7 @@
     <string name="nav_header_subtitle">mail@mail.ru</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Настройки</string>
+    <string name="action_check_diskont">Проверить карту клиента</string>
     <string name="action_exit">Выход</string>
 
     <string name="menu_home">Список залов</string>

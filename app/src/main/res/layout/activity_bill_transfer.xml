@@ -22,22 +22,22 @@
             android:id="@+id/choose_all_orders_to_transfer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginBottom="16dp"
             android:text="Выбрать все"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     <Button
             android:id="@+id/transfer_choose_destination_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
             android:text="Далее"
             app:layout_constraintBottom_toBottomOf="@+id/choose_all_orders_to_transfer"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/order_transfer_destination_container"
@@ -85,6 +85,7 @@
             android:background="#F44336"
             android:text="Отмена"
             app:layout_constraintBottom_toBottomOf="@+id/choose_all_orders_to_transfer"
-            app:layout_constraintEnd_toStartOf="@+id/choose_all_orders_to_transfer"
-            app:layout_constraintStart_toEndOf="@+id/transfer_choose_destination_button" />
+            app:layout_constraintEnd_toStartOf="@+id/transfer_choose_destination_button"
+            app:layout_constraintHorizontal_bias="0.49"
+            app:layout_constraintStart_toEndOf="@+id/choose_all_orders_to_transfer" />
 </androidx.constraintlayout.widget.ConstraintLayout>

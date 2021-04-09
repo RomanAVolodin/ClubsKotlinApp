@@ -6,6 +6,7 @@ data class MenuEntity (
     val id: Int,
     val name_button: String,
     val basePrice: Int,
+    val weight: Int,
     val actualPriceInHall: Int,
     val deleted: Boolean,
     val additions: List<MenuAdditionType>,

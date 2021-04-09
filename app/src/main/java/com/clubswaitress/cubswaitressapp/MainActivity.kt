@@ -19,9 +19,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import com.clubswaitress.cubswaitressapp.Models.User
-import com.clubswaitress.cubswaitressapp.Pages.HallsListFragment
-import com.clubswaitress.cubswaitressapp.Pages.MenuWebBarFragment
-import com.clubswaitress.cubswaitressapp.Pages.MenuWebFragment
+import com.clubswaitress.cubswaitressapp.Pages.*
 
 class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -94,6 +92,7 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_settings -> {
+                callUserChooseActivity()
                 return true
             }
             R.id.action_exit -> {
@@ -114,6 +113,10 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
                 showHallsFragment()
             }
 
+            R.id.nav_check_card-> {
+                callUserChooseActivity()
+            }
+
             R.id.nav_menu_rest -> {
                 showMenuWebFragment()
             }
@@ -122,6 +125,12 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    val CHOOSE_CLIENT = 100
+    private fun callUserChooseActivity(){
+        val intent = Intent(this, ClientSimpleSearchActivity::class.java)
+        startActivityForResult(intent, CHOOSE_CLIENT)
     }
 
     fun showHallsFragment() {

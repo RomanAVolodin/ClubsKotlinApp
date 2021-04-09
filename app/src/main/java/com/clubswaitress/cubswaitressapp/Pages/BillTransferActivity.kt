@@ -119,26 +119,11 @@ class BillTransferActivity : ActivityListener(){
 
         val bill_original = bill
         var orders = bill?.orders
-        var orders_negative = orders?.filter {
-            it.qnt < 0
-        }
-        orders_positive = orders?.filter {
-            it.qnt > 0
-        }
 
-        if (orders_negative != null) {
-            for (order in orders_negative) {
-                if (orders_positive != null) {
-                    for (order_positive in orders_positive!!){
-                        if (order_positive.menu_item_id == order.menu_item_id) {
-                            val diff = min(order_positive.qnt, abs(order.qnt))
-                            order_positive.qnt = order_positive.qnt - diff
-                            order.qnt = order.qnt + diff
-                            if (order.qnt <= 0) {
-                                break
-                            }
-                        }
-                    }
+        if (orders != null) {
+            for (order in orders) {
+                if (order.qnt > 0) {
+                    order.qnt = BillActivity.calculateOrderQNTincludingCancelations(order, bill)
                 }
 
             }
@@ -406,22 +391,24 @@ class TableItemTransfer(val table: Table, val hall: Hall?, val parentActivity: B
             }
         }
         client.use {
-            newBill = it.post(transfer_orders_url) {
-                body = FormDataContent( // создаем параметры, которые будут переданы в form
-                    Parameters.build {
-                        append("from_id", from_id.toString())
-                        append("bill_id", bill_id.toString())
-                        append("qnt", qnt.toString())
-                        append("price", price)
-                        append("price_discount", price_discount)
-                        append("price_fix", price_fix)
-                        append("from_bill_id", bill_source.toString())
-                        append("to_bill_id", bill_id.toString())
-                        append("personal_id", MainActivity.currentUser?.id.toString())
-                    }
-                )
-
+            val params = Parameters.build {
+                append("from_id", from_id.toString())
+                append("bill_id", bill_id.toString())
+                append("qnt", qnt.toString())
+                append("price", price)
+                append("price_discount", price_discount)
+                append("price_fix", price_fix)
+                append("from_bill_id", bill_source.toString())
+                append("to_bill_id", bill_id.toString())
+                append("personal_id", MainActivity.currentUser?.id.toString())
             }
+            newBill = it.post(transfer_orders_url) {
+                body = FormDataContent(
+                    params
+                )
+            }
+
+            Log.w("TEST", "TRANSFER order $params")
 
         }
 
@@ -460,26 +447,8 @@ class TableItemTransfer(val table: Table, val hall: Hall?, val parentActivity: B
                     it.isReadyForTransfer
                 }
                 for (order in orders) {
-                    launch(Dispatchers.Main) {
-                        Log.w("TEST", transfer_orders_url)
-                        Log.w("TEST", "from_id ${order.id}")
-                        Log.w("TEST","bill_id ${bill_id}")
-                        Log.w("TEST","price_discount ${order.price_discount}")
-                        Log.w("TEST","price ${order.price_num}")
-                        Log.w("TEST","price_fix ${order.price_fix}")
-                        Log.w("TEST","qnt ${order.qnt}")
-                        Log.w("TEST","to_bill_id ${bill_id}")
-                        Log.w("TEST","from_bill_id ${parentActivity.bill!!.id}")
-                        Log.w("TEST","personal_id ${MainActivity.currentUser?.id}")
-                    }
                     transfer_orders(order.id, bill_id, order.qnt, order.price_num, order.price_discount, order.price_fix, parentActivity.bill!!.id)
-
                 }
-
-//                MainActivity.currentUser?.id?.let {
-//                    transfer_orders_finish(bill_id, parentActivity.bill!!.id,
-//                        it, 1)
-//                }
             } catch (cause: Throwable) {
                 launch(Dispatchers.Main) {
 

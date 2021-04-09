@@ -9,7 +9,8 @@ class Hall (
     val name: String,
     val show_tables_total: Boolean,
     val delete_empty_bill: Boolean,
-    val isGuests: Boolean
+    val isGuests: Boolean,
+    val dynamic: Boolean
 
 ): Parcelable
 

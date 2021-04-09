@@ -22,6 +22,12 @@ data class Bill (
     val personal_id: Int,
     val clientsName: String,
     val clientsGroup: String,
+    val gclients_total_fix_discount: String,
+    val gclients_total_discount: String,
     val opened: String,
     val orders: List<Order>
-): Serializable
+): Serializable {
+    public fun isNeededMissed(): Boolean {
+        return this.orders.indexOfFirst { it.isNeededMissed } != -1
+    }
+}

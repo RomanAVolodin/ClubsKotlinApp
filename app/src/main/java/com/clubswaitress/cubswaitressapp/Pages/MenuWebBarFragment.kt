@@ -5,8 +5,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebSettings
 import com.clubswaitress.cubswaitressapp.MainActivity
 import com.clubswaitress.cubswaitressapp.R
+import kotlinx.android.synthetic.main.activity_menu_club.*
 import kotlinx.android.synthetic.main.fragment_menu_web_bar.*
 
 // TODO: Rename parameter arguments, choose names that match
@@ -44,6 +46,8 @@ class MenuWebBarFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         val url = "${MainActivity.serverBaseUrl}/webmenu/bar"
+        menu_bar_web_page.settings.setAppCacheEnabled(false)
+        menu_bar_web_page.settings.cacheMode = WebSettings.LOAD_NO_CACHE
         menu_bar_web_page.loadUrl(url)
 
     }

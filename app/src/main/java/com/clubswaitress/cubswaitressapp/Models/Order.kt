@@ -16,7 +16,10 @@ data class Order (
     val price_fix: String,
     var isReadyForTransfer: Boolean = false,
     val childs: List<OrderChild>,
-    var menuEntity: MenuEntity
+    var menuEntity: MenuEntity,
+    var cancel_order_id: Int,
+    var input_time: String,
+    var isNeededMissed: Boolean = false
 ): Serializable
 
 data class OrderChild(

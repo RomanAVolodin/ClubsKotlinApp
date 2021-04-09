@@ -1,19 +1,24 @@
 package com.clubswaitress.cubswaitressapp
 
+import android.Manifest
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.clubswaitress.cubswaitressapp.Models.User
 import com.clubswaitress.cubswaitressapp.Pages.MenuClubActivity
+import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.features.json.GsonSerializer
@@ -23,7 +28,6 @@ import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.post
 import io.ktor.http.Parameters
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -94,7 +98,6 @@ class LoginActivity : AppCompatActivity() {
 
             } catch (cause: Throwable) {
 
-                Log.w("TEST", cause.message)
                 println("URL: $fetch_url")
 
                 launch(Dispatchers.Main) {
@@ -136,6 +139,8 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        supportActionBar?.title = "XPOS mobile v.${BuildConfig.VERSION_NAME}"
 
         Log.i(MainActivity.TAG, "try to get users creads")
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
@@ -202,6 +207,40 @@ class LoginActivity : AppCompatActivity() {
 
             pin_code_TextPassword.setText("")
             settings_container_in_login_view.visibility = View.GONE
+
+        }
+
+        update_app_button.setOnClickListener {
+            Log.w("TEST", "Trying to updtate appp")
+
+//            val permission = ContextCompat.checkSelfPermission(this,
+//                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//
+//            if (permission != PackageManager.PERMISSION_GRANTED) {
+//                Log.i("TEST", "Permission to record denied")
+//                ActivityCompat.requestPermissions(this,
+//                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+//                    101)
+//            }
+//
+//            val permission2 = ContextCompat.checkSelfPermission(this,
+//                Manifest.permission.READ_EXTERNAL_STORAGE)
+//
+//            if (permission2 != PackageManager.PERMISSION_GRANTED) {
+//                Log.i("TEST", "Permission to read denied")
+//                ActivityCompat.requestPermissions(this,
+//                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+//                    102)
+//            }
+//
+//            val atualizaApp = UpdateApp()
+//            atualizaApp.setContext(applicationContext)
+//            atualizaApp.execute("http://aurora.zavods.net/clubs.apk")
+
+            val browserIntent =
+                Intent(Intent.ACTION_VIEW, Uri.parse("http://aurora.zavods.net/clubs.apk"))
+            startActivity(browserIntent)
+
         }
 
         floatingActionButtonShowSettings.setOnClickListener {

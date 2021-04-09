@@ -112,10 +112,14 @@ class HallwithTablesActivity : ActivityListener() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hallwith_tables)
 
-        hall_with_tables_tables_recycler_view.setLayoutManager(GridLayoutManager(null, 2));
-
-
         hall = intent.getParcelableExtra<Hall>(HALL_KEY)
+        var spanCount = 2
+        if (hall?.dynamic == true) {
+            spanCount = 1
+        }
+        hall_with_tables_tables_recycler_view.setLayoutManager(GridLayoutManager(null, spanCount))
+
+        Log.w("TEST", hall?.name + " : " + hall?.dynamic)
 
         supportActionBar?.title = "Зал: ${hall?.name}"
         supportActionBar?.subtitle = "${MainActivity.currentUser?.username}, терминал: ${MainActivity.currentUser?.hardware_name}"
@@ -249,7 +253,11 @@ class TableItem(val table: Table, val hall: Hall?): Item<ViewHolder>() {
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
 
-        viewHolder.itemView.table_in_list_view_table_number.text = table.number.toString()
+        if (table.number > 0) {
+            viewHolder.itemView.table_in_list_view_table_number.text = table.number.toString()
+        } else {
+            viewHolder.itemView.table_in_list_view_table_number.text = "Динамический"
+        }
         if (hall != null && hall.show_tables_total) {
             viewHolder.itemView.table_in_list_view_total_sum.text = table.total
         } else {
