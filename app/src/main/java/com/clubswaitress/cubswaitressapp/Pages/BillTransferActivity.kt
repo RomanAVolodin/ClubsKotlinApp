@@ -401,6 +401,7 @@ class TableItemTransfer(val table: Table, val hall: Hall?, val parentActivity: B
                 append("from_bill_id", bill_source.toString())
                 append("to_bill_id", bill_id.toString())
                 append("personal_id", MainActivity.currentUser?.id.toString())
+                append("hardware_id", MainActivity.currentHardwareID)
             }
             newBill = it.post(transfer_orders_url) {
                 body = FormDataContent(

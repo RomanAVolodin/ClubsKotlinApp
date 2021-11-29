@@ -34,6 +34,7 @@
 
 
     <string-array name="clubs_list">
+        <item>main.menu</item>
         <item>loftclub.ru</item>
         <item>clubangels.ru</item>
         <item>club-aurora.ru</item>

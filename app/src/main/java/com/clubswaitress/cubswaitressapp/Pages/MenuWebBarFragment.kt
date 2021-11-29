@@ -45,6 +45,7 @@ class MenuWebBarFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        //val url = "${MainActivity.serverBaseUrl}/webmenu/bar"
         val url = "${MainActivity.serverBaseUrl}/webmenu/bar"
         menu_bar_web_page.settings.setAppCacheEnabled(false)
         menu_bar_web_page.settings.cacheMode = WebSettings.LOAD_NO_CACHE

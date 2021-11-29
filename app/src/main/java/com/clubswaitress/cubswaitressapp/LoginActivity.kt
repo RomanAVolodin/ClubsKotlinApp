@@ -1,24 +1,21 @@
 package com.clubswaitress.cubswaitressapp
 
-import android.Manifest
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.webkit.WebView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.clubswaitress.cubswaitressapp.Models.User
 import com.clubswaitress.cubswaitressapp.Pages.MenuClubActivity
-import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.features.json.GsonSerializer
@@ -31,6 +28,7 @@ import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -266,7 +264,7 @@ class LoginActivity : AppCompatActivity() {
             val username = login_activity_username.text.toString()
             val password = login_activity_password.text.toString()
 
-            if (username.isEmpty() || password.isEmpty()) {
+            if (username.isEmpty()) {
                 Toast.makeText(this, "Пожалуйста заполните все поля", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }

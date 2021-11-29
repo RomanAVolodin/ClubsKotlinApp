@@ -299,7 +299,6 @@ class BillActivity : ActivityListener() {
 
 
     suspend fun fetchBill() {
-
         val client = HttpClient(Android) {
             install(JsonFeature) {
                 serializer = GsonSerializer()
@@ -581,9 +580,7 @@ class BillActivity : ActivityListener() {
             print_bill_button_in_bill_view.text = "Отмена печати"
             print_orders_button_in_bill_view.visibility = View.GONE
             bill_transfer_button.visibility = View.GONE
-
             adaptor.setOnItemClickListener { item, view ->
-
             }
 
         } else {
@@ -682,6 +679,7 @@ class BillActivity : ActivityListener() {
                         append("price_discount", selectedMenuEntity?.actualPriceInHall.toString())
                         append("price_fix", "1")
                         append("name_menu_add_id", "1")
+                        append("hardware_id", MainActivity.currentHardwareID)
                         if (updatingOrderId != null) append("updatingOrderId", updatingOrderId.toString())
                     }
                 )
@@ -705,6 +703,7 @@ class BillActivity : ActivityListener() {
                                             append("price", "0")
                                             append("price_discount", "0")
                                             append("price_fix", "1")
+                                            append("hardware_id", MainActivity.currentHardwareID)
                                             append("name_menu_add_id", additionType.id.toString())
                                         }
                                     )
@@ -740,7 +739,8 @@ class BillActivity : ActivityListener() {
                     else -> {
                         launch(Dispatchers.Main) {
 //                            Toast.makeText(applicationContext, "Что-то пошло не так...", Toast.LENGTH_SHORT).show()
-                            Log.w("TEST", cause)
+                            Log.w("TEST", "Here i am testing QNT0")
+                            Log.w("TEST", cause.localizedMessage)
                         }
 //                        return@launch
                     }
@@ -1037,7 +1037,6 @@ class BillActivity : ActivityListener() {
 
         search_menu_text_cancel.setOnClickListener {
             search_menu_container.visibility = View.GONE
-
             hideKeyboard()
         }
 
@@ -1049,10 +1048,7 @@ class BillActivity : ActivityListener() {
             }
             fetchMenuAndUpdateUI(0, search)
             hideKeyboard()
-
         }
-
-
     }
 
     fun showKeyboard() {

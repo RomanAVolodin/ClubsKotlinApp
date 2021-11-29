@@ -46,8 +46,9 @@ class MenuWebFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val url = "${MainActivity.serverBaseUrl}/webmenus/${MainActivity.club_menu_url}/qr-menu.html"
-        Log.w("TEST", "${MainActivity.serverBaseUrl}/webmenus/${MainActivity.club_menu_url}/qr-menu.html")
+        //val url = "${MainActivity.serverBaseUrl}/webmenus/${MainActivity.club_menu_url}/qr-menu.html"
+        val url = "${MainActivity.serverBaseUrl}/webmenus/main.menu/qr-menu.html"
+        Log.w("TEST", "${MainActivity.serverBaseUrl}/webmenus/main.menu/qr-menu.html")
         menu_web_page.settings.setAppCacheEnabled(false)
         menu_web_page.settings.cacheMode = WebSettings.LOAD_NO_CACHE
         menu_web_page.loadUrl(url)
