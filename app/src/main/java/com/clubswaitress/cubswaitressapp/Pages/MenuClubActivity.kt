@@ -55,6 +55,7 @@ class MenuClubActivity : AppCompatActivity() {
             Log.w("TEST", "LOAD CACHE")
         }
 
+        menu_web_view.getSettings().setBuiltInZoomControls(true);
 
         menu_web_view.loadUrl(url)
 
