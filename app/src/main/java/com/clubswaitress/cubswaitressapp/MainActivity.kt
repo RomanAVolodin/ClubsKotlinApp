@@ -64,7 +64,6 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
 
         startLockTask()
 
-
     }
 
 
@@ -113,6 +112,10 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
                 showHallsFragment()
             }
 
+            R.id.nav_book_hotel-> {
+                callHotelActivity()
+            }
+
             R.id.nav_check_card-> {
                 callUserChooseActivity()
             }
@@ -132,6 +135,12 @@ class MainActivity : ActivityListener(), NavigationView.OnNavigationItemSelected
         val intent = Intent(this, ClientSimpleSearchActivity::class.java)
         startActivityForResult(intent, CHOOSE_CLIENT)
     }
+
+    private fun callHotelActivity(){
+        val intent = Intent(this, BookHotelActivity::class.java)
+        startActivityForResult(intent, CHOOSE_CLIENT)
+    }
+
 
     fun showHallsFragment() {
         val meetingPage = HallsListFragment.newInstance()

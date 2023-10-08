@@ -16,8 +16,8 @@ android {
         applicationId "com.clubswaitress.cubswaitressapp"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 41
-        versionName "4.1"
+        versionCode 47
+        versionName "4.7"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

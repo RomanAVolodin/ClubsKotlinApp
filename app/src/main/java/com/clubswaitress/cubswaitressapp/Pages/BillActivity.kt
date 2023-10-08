@@ -28,6 +28,7 @@ import com.xwray.groupie.Item
 import com.xwray.groupie.ViewHolder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
+import io.ktor.client.features.BadResponseStatusException
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.HttpRequestBuilder
@@ -452,10 +453,20 @@ class BillActivity : ActivityListener() {
                         }
                         return@launch
                     }
+                    is BadResponseStatusException -> {
+                        launch(Dispatchers.Main) {
+                            progressDialog.dismiss()
+                            Toast.makeText(applicationContext, "Вероятно, счет пустой и был удален в соответствии с правилами клуба", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                        return@launch
+                    }
                     else -> {
                         launch(Dispatchers.Main) {
                             progressDialog.dismiss()
-                            Toast.makeText(applicationContext, "Что-то пошло не так...", Toast.LENGTH_SHORT).show()
+                            Log.w("TEST", cause.localizedMessage)
+                            Log.w("TEST", cause)
+                            Toast.makeText(applicationContext, "Произошла ошибка севрера", Toast.LENGTH_SHORT).show()
                         }
                         return@launch
                     }
@@ -1340,6 +1351,7 @@ class BillActivity : ActivityListener() {
             try {
                 finishEditing()
             } catch (cause: Throwable) {
+                Log.w("TEST", cause.toString())
                 when(cause) {
                     is ConnectException -> {
                         launch(Dispatchers.Main) {
@@ -1355,10 +1367,18 @@ class BillActivity : ActivityListener() {
                         }
                         return@launch
                     }
+                    is BadResponseStatusException -> {
+                        launch(Dispatchers.Main) {
+                            Toast.makeText(applicationContext, "Вероятно, счет пустой и был удален, создайте новый счет", Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                        return@launch
+                    }
                     else -> {
                         launch(Dispatchers.Main) {
                             loader_in_menu_view.visibility = View.GONE
-                            Toast.makeText(applicationContext, "Что-то пошло не так...", Toast.LENGTH_SHORT).show()
+                            Log.w("TEST", cause.localizedMessage)
+                            Toast.makeText(applicationContext, "Счет пустой и был удален или проблема со связью", Toast.LENGTH_SHORT).show()
                         }
                         return@launch
                     }

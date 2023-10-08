@@ -12,5 +12,6 @@ data class Client (
     val dateadd: String,
     val last_date: String,
     val cli_sum: Double,
-    val group_name: String
+    val group_name: String,
+    var qr_code: String
 ): Serializable

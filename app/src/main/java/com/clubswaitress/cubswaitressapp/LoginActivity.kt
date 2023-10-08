@@ -45,7 +45,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     suspend fun fetchUser() {
-
         val client = HttpClient(Android) {
             install(JsonFeature) {
                 serializer = GsonSerializer()
@@ -56,17 +55,7 @@ class LoginActivity : AppCompatActivity() {
             user = it.post(fetch_url) {
                 fillHeadersCaseParameters()
             }
-
-//            Log.i("UserCreds", user?.id.toString())
-//            Log.i("UserCreds", user?.username.toString())
-//
-//            for (act in user?.safe_actions!!) {
-//                Log.i("UserCreds", act.id.toString())
-//                Log.i("UserCreds", act.name.toString())
-//            }
-
         }
-
     }
 
     private fun HttpRequestBuilder.fillHeadersCaseParameters() {
@@ -82,7 +71,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun fetchUserAndUpdateUI() {
-
         val progressDialog = ProgressDialog(this)
         progressDialog.setMessage("Проверяю данные пользователя...")
         progressDialog.setCancelable(false)
@@ -91,37 +79,25 @@ class LoginActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.IO) {
 
             try {
-
                 fetchUser()
-
             } catch (cause: Throwable) {
-
-                println("URL: $fetch_url")
-
                 launch(Dispatchers.Main) {
                     progressDialog.dismiss()
                     Toast.makeText(applicationContext, "Ошибка авторизации или не тот терминал", Toast.LENGTH_LONG).show()
                 }
-
                 return@launch
             }
 
             if (user != null) {
                 launch(Dispatchers.Main) {
-
                     progressDialog.dismiss()
-
                     val sharedPref = this@LoginActivity.getPreferences(Context.MODE_PRIVATE)
                     with (sharedPref.edit()) {
                         putString("user_pass", login_activity_password.text.toString())
                         putString("user_name", login_activity_username.text.toString())
-
-
                         putString("ipAddress", ip_address_textfield_in_login_view.text.toString())
                         putString("terminalID", terminal_id_textfield_in_login_view.text.toString())
-
                         putString("edit_text_delay_to_exit_time", edit_text_delay_to_exit_time.text.toString())
-                        Log.i(MainActivity.TAG, "savedusers creds")
                         commit()
                     }
 
@@ -140,7 +116,6 @@ class LoginActivity : AppCompatActivity() {
 
         supportActionBar?.title = "XPOS mobile v.${BuildConfig.VERSION_NAME}"
 
-        Log.i(MainActivity.TAG, "try to get users creads")
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
         val user_pass = sharedPref.getString("user_pass", "")
         val user_name = sharedPref.getString("user_name", "")
@@ -177,6 +152,15 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this@LoginActivity, MenuClubActivity::class.java)
             MenuClubActivity.club_url = spinner_menu_club.selectedItem.toString()
             MenuClubActivity.server_ip = "http://" + ip_address_textfield_in_login_view.text.toString()
+            MenuClubActivity.menuType = "old"
+            ContextCompat.startActivity(this, intent, null)
+        }
+
+        imageButton_for_menu_new.setOnClickListener{
+            val intent = Intent(this@LoginActivity, MenuClubActivity::class.java)
+            MenuClubActivity.club_url = spinner_menu_club.selectedItem.toString()
+            MenuClubActivity.server_ip = "http://" + ip_address_textfield_in_login_view.text.toString()
+            MenuClubActivity.menuType = "new"
             ContextCompat.startActivity(this, intent, null)
         }
 
@@ -209,32 +193,6 @@ class LoginActivity : AppCompatActivity() {
         }
 
         update_app_button.setOnClickListener {
-            Log.w("TEST", "Trying to updtate appp")
-
-//            val permission = ContextCompat.checkSelfPermission(this,
-//                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//
-//            if (permission != PackageManager.PERMISSION_GRANTED) {
-//                Log.i("TEST", "Permission to record denied")
-//                ActivityCompat.requestPermissions(this,
-//                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-//                    101)
-//            }
-//
-//            val permission2 = ContextCompat.checkSelfPermission(this,
-//                Manifest.permission.READ_EXTERNAL_STORAGE)
-//
-//            if (permission2 != PackageManager.PERMISSION_GRANTED) {
-//                Log.i("TEST", "Permission to read denied")
-//                ActivityCompat.requestPermissions(this,
-//                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-//                    102)
-//            }
-//
-//            val atualizaApp = UpdateApp()
-//            atualizaApp.setContext(applicationContext)
-//            atualizaApp.execute("http://aurora.zavods.net/clubs.apk")
-
             val browserIntent =
                 Intent(Intent.ACTION_VIEW, Uri.parse("http://aurora.zavods.net/clubs.apk"))
             startActivity(browserIntent)

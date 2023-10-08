@@ -29,6 +29,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import kotlinx.android.synthetic.main.activity_hallwith_tables.*
 import kotlinx.android.synthetic.main.bill_short_in_table_list_view.view.*
+import kotlinx.android.synthetic.main.room_in_hotel_in_list_view.view.*
 import kotlinx.android.synthetic.main.table_in_lict_view.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

@@ -17,6 +17,7 @@
             android:usesCleartextTraffic="true">
         <activity android:name=".Pages.ClientSearchActivity"></activity>
         <activity android:name=".Pages.ClientSimpleSearchActivity"></activity>
+        <activity android:name=".Pages.BookHotelActivity"></activity>
         <activity
                 android:name=".Pages.CaptureActivity"
                 android:screenOrientation="fullSensor"

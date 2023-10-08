@@ -15,6 +15,7 @@ class MenuClubActivity : AppCompatActivity() {
     companion object {
         var server_ip = ""
         var club_url = ""
+        var menuType = ""
     }
 
     private fun isNetworkConnected(): Boolean {
@@ -37,9 +38,11 @@ class MenuClubActivity : AppCompatActivity() {
         actionbar.setDisplayHomeAsUpEnabled(true)
         actionbar.setDisplayHomeAsUpEnabled(true)
 
-//        val url = "${server_ip}/webmenus/${club_url}/qr-menu.html"
-        val url = "${server_ip}/webmenus/main.menu/qr-menu.html"
-        Log.w("TEST", "${server_ip}/webmenus/main.menu/qr-menu.html")
+        var url = "${server_ip}/webmenus/main.menu/qr-menu.html"
+        if (menuType == "new") {
+            url = "${server_ip}/webmenus/interactive/index.html"
+        }
+//        val url = "http://192.168.1.108:5173/"
 
         supportActionBar?.hide()
 
@@ -56,6 +59,7 @@ class MenuClubActivity : AppCompatActivity() {
         }
 
         menu_web_view.getSettings().setBuiltInZoomControls(true);
+        menu_web_view.getSettings().setDisplayZoomControls(false);
 
         menu_web_view.loadUrl(url)
 
